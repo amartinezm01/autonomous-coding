@@ -103,7 +103,7 @@ def create_app(project_dir: Path) -> FastAPI:
 
     @app.get("/features", response_model=FeatureListResponse)
     def list_features(
-        limit: int = Query(50, ge=1, le=1000),
+        limit: int = Query(5, ge=1, le=5),
         offset: int = Query(0, ge=0),
         passes: Optional[bool] = Query(None),
         category: Optional[str] = Query(None),
@@ -112,10 +112,14 @@ def create_app(project_dir: Path) -> FastAPI:
         """
         List features with pagination and optional filtering.
 
-        - **limit**: Maximum number of features to return (1-1000)
+        - **limit**: Maximum number of features to return (1-5, capped to prevent token waste)
         - **offset**: Number of features to skip
         - **passes**: Filter by pass status (true/false)
         - **category**: Filter by category name
+
+        NOTE: This endpoint is primarily for regression testing (fetching a few passing features).
+        Use /features/next to get the next feature to work on.
+        Use /features/stats for progress information.
         """
         query = db.query(Feature)
 

@@ -492,7 +492,7 @@ If you have time remaining in this session, you may begin implementing
 the highest-priority features. Get the next feature with:
 
 ```bash
-curl -s http://localhost:8765/features/next | jq
+curl -s http://localhost:8765/features/next
 ```
 
 Remember:
@@ -506,7 +506,7 @@ Before your context fills up:
 
 1. Commit all work with descriptive messages
 2. Create `claude-progress.txt` with a summary of what you accomplished
-3. Verify features were created via API: `curl -s http://localhost:8765/features/stats | jq`
+3. Verify features were created via API: `curl -s http://localhost:8765/features/stats`
 4. Leave the environment in a clean, working state
 
 The next agent will continue from here with a fresh context window.

@@ -18,7 +18,7 @@ ls -la
 cat app_spec.txt
 
 # 4. Get progress statistics (passing/total counts)
-curl -s http://localhost:8765/features/stats | jq
+curl -s http://localhost:8765/features/stats
 
 # 5. Read progress notes from previous sessions
 cat claude-progress.txt
@@ -27,7 +27,7 @@ cat claude-progress.txt
 git log --oneline -20
 
 # 7. Get the next feature to work on
-curl -s http://localhost:8765/features/next | jq
+curl -s http://localhost:8765/features/next
 ```
 
 Understanding the `app_spec.txt` is critical - it contains the full requirements
@@ -57,7 +57,7 @@ Run 1-2 of the features marked as passing that are most core to the app's functi
 
 To get passing features for regression testing:
 ```bash
-curl -s "http://localhost:8765/features?passes=true&limit=3" | jq '.features[] | {id, name, description}'
+curl -s "http://localhost:8765/features?passes=true&limit=3"
 ```
 For example, if this were a chat app, you should perform a test that logs into the app, sends a message, and gets a response.
 
@@ -81,7 +81,7 @@ Get the next feature to implement from the API:
 
 ```bash
 # Get the highest-priority pending feature
-curl -s http://localhost:8765/features/next | jq
+curl -s http://localhost:8765/features/next
 ```
 
 Focus on completing one feature perfectly and completing its testing steps in this session before moving on to other features.
@@ -273,6 +273,39 @@ Available tools:
 
 Test like a human user with mouse and keyboard. Don't take shortcuts by using JavaScript evaluation.
 Don't use the puppeteer "active tab" tool.
+
+---
+
+## API USAGE RULES (CRITICAL - DO NOT VIOLATE)
+
+The Feature API exists to reduce token usage. **DO NOT make exploratory queries.**
+
+### ALLOWED API Calls (ONLY these):
+
+```bash
+# 1. Get progress stats
+curl -s http://localhost:8765/features/stats
+
+# 2. Get the NEXT feature to work on (one feature only)
+curl -s http://localhost:8765/features/next
+
+# 3. Get up to 3 passing features for regression testing
+curl -s "http://localhost:8765/features?passes=true&limit=3"
+
+# 4. Mark a feature as passing
+curl -X PATCH http://localhost:8765/features/{id} \
+  -H "Content-Type: application/json" \
+  -d '{"passes": true}'
+```
+
+### FORBIDDEN API Calls (NEVER do these):
+
+- `curl .../features?limit=20` - Do NOT fetch lists of features
+- `curl .../features?limit=50` - Do NOT browse the feature catalog
+- `curl .../features?category=...` - Do NOT query by category
+- `curl .../features?passes=false&limit=...` - Do NOT list pending features
+
+**You do NOT need to see all features.** The `/features/next` endpoint tells you exactly what to work on. Trust it.
 
 ---
 
