@@ -3,126 +3,162 @@
   <project_name>Business Finder</project_name>
 
   <overview>
-    Business Finder is a global business directory application where business owners can list their businesses with comprehensive information (contact details, operating hours, services, events) and users can discover businesses through powerful PostgreSQL full-text search, category browsing, or location-based discovery. The platform supports country-based filtering with automatic detection via IP/browser geolocation. Users can review businesses, save favorites, and RSVP to events. Business owners have a dedicated dashboard with full analytics (views, impressions, charts by source/location/device) and can respond to reviews. Platform administrators manage users, verify businesses, moderate content, and maintain categories. The app features a professional glassmorphism design with warm tones (oranges, ambers, warm grays).
+    Business Finder is a global business directory application where users can discover businesses through powerful PostgreSQL full-text search, category browsing, or location-based discovery. Signed-in users can add businesses, write reviews, save favorites, and RSVP to events. Business owners can claim listings, view comprehensive analytics, and respond to reviews (when verified). Platform administrators manage users, verify businesses, and moderate content. The platform supports country-based filtering with automatic detection via IP/browser geolocation. The app features a clean, minimal design inspired by Airbnb with light/dark mode support.
   </overview>
+
+  <boilerplate_cleanup>
+    <description>This project starts from an existing boilerplate that includes Next.js 16, Better Auth, and Drizzle ORM.</description>
+    <remove>
+      - AI SDK package and all AI-related dependencies
+      - OpenRouter package and configuration
+      - Chat page/components and any AI chat functionality
+      - Any AI-related API routes
+      - Unused boilerplate components (setup-checklist, starter-prompt-modal, diagnostics)
+    </remove>
+    <replace>
+      - Boilerplate branding with "Business Finder" branding
+      - Boilerplate home page with discovery-focused homepage
+      - Boilerplate header with new navigation structure
+      - Boilerplate footer with country selector and new links
+    </replace>
+  </boilerplate_cleanup>
 
   <technology_stack>
     <frontend>
-      <framework>Next.js 16.0.7</framework>
-      <ui_library>React 19.2.1</ui_library>
-      <language>TypeScript 5.9.3</language>
-      <styling>TailwindCSS 4.1.17</styling>
-      <components>shadcn/ui with Radix UI primitives</components>
+      <framework>Next.js 16 with React 19</framework>
+      <language>TypeScript</language>
+      <styling>TailwindCSS with shadcn/ui components</styling>
       <icons>Lucide React</icons>
       <charts>Recharts (for analytics dashboards)</charts>
-      <maps>Leaflet with React-Leaflet (open source maps)</maps>
-      <notifications>Sonner (toasts) + custom notification system</notifications>
-      <theming>next-themes (dark mode support)</theming>
+      <maps>Leaflet with React-Leaflet and OpenStreetMap (free, no API keys)</maps>
+      <notifications>Sonner (toasts) + custom in-app notification system</notifications>
+      <theming>next-themes (light/dark mode with user toggle)</theming>
     </frontend>
     <backend>
-      <runtime>Node.js with Next.js API routes</runtime>
-      <database>PostgreSQL with full-text search (tsvector)</database>
-      <orm>Drizzle ORM 0.44.7</orm>
+      <runtime>Node.js with Next.js Server Actions and API routes</runtime>
+      <database>PostgreSQL running in Docker container</database>
+      <orm>Drizzle ORM</orm>
+      <search>PostgreSQL full-text search with tsvector and materialized views</search>
       <validation>Zod</validation>
     </backend>
     <authentication>
-      <provider>Better Auth 1.4.5</provider>
-      <method>Email and password (replacing Google OAuth from boilerplate)</method>
-      <features>Email verification, password reset, session management</features>
+      <provider>Better Auth</provider>
+      <method>Email and password only (no social login)</method>
     </authentication>
-    <utilities>
-      <css_utilities>class-variance-authority, clsx, tailwind-merge</css_utilities>
-    </utilities>
   </technology_stack>
 
   <design_system>
-    <style>Professional glassmorphism</style>
-    <effects>Transparent components with backdrop blur, glass effects</effects>
+    <style>Clean minimal design inspired by Airbnb</style>
+    <layout>Minimal fixed header, full-width content, footer with country selector</layout>
     <color_palette>
-      <primary>Warm tones - oranges, ambers</primary>
-      <neutral>Warm grays</neutral>
-      <accent>Derived warm accent colors</accent>
+      <primary>Blue tones for trust and professionalism</primary>
+      <secondary>Warm accent for CTAs</secondary>
+      <success>Green</success>
+      <warning>Amber</warning>
+      <error>Red</error>
+      <neutral>Grays for text and backgrounds</neutral>
     </color_palette>
-    <dark_mode>Full support with next-themes</dark_mode>
+    <typography>
+      - Clean sans-serif font (system fonts or Inter)
+      - Clear hierarchy with distinct heading sizes
+      - Readable body text (16px base)
+    </typography>
+    <dark_mode>Full support with user toggle and preference persistence</dark_mode>
     <responsive>Mobile-first, fully responsive design</responsive>
   </design_system>
 
-  <feature_count>340</feature_count>
+  <feature_count>190</feature_count>
 
   <security_and_access_control>
     <user_roles>
+      <role name="anonymous">
+        <description>Visitors without an account</description>
+        <permissions>
+          - Browse and search businesses
+          - View business details, reviews, events
+          - View promotions
+          - Cannot add businesses, reviews, or favorites
+        </permissions>
+      </role>
       <role name="user">
         <description>Default role for all registered users</description>
         <permissions>
-          - Browse and search businesses
-          - View business details
-          - Write reviews and ratings
-          - Save businesses to favorites
+          - All anonymous permissions
+          - Add new business listings
+          - Write one review per business (can edit/delete own)
+          - Add/remove favorites
           - RSVP to events
-          - Manage own profile and settings
-          - Add new business listings (anyone can add)
-          - Claim ownership of business listings
-          - Switch to business owner mode (if owns businesses)
-          - Report inappropriate reviews
+          - View recently viewed businesses
+          - Report inappropriate content
+          - Access user dashboard
+          - Claim business ownership (pending admin approval)
         </permissions>
         <protected_routes>
-          - /dashboard/* (authenticated users)
-          - /profile/* (authenticated users)
-          - /favorites (authenticated users)
-          - /my-reviews (authenticated users)
+          - /dashboard/*
+          - /favorites
+          - /my-reviews
         </protected_routes>
       </role>
       <role name="business_owner">
-        <description>Users who have claimed or created business listings (mode within user role)</description>
+        <description>Users who have claimed businesses (mode within user role, not separate role)</description>
         <permissions>
           - All user permissions
-          - Edit own business listings
-          - Delete own business listings
-          - View analytics for own businesses (impressions, views, charts)
-          - Respond to reviews on own businesses
-          - Create and manage events for own businesses
-          - View detailed statistics by source, location, device
+          - Switch to business owner mode
+          - View analytics for owned businesses (impressions, views, clicks, trends over time)
+          - Create/edit/delete events for owned businesses
+          - Create/edit/delete promotions for owned businesses
+          - Respond to reviews (only if business is VERIFIED)
+          - Access business owner dashboard
         </permissions>
         <protected_routes>
-          - /business-dashboard/* (business owners)
-          - /my-listings/* (business owners)
+          - /business-dashboard/*
         </protected_routes>
       </role>
       <role name="admin">
-        <description>Platform administrators with full system access</description>
+        <description>Platform administrators (platform_role = 'admin' in users table)</description>
         <permissions>
-          - All user and business owner permissions
+          - All user permissions
           - Access admin dashboard
-          - View and manage all users
-          - View and manage all business listings
-          - Verify/unverify businesses
-          - Remove businesses
-          - Flag businesses
-          - Moderate reported reviews
-          - Remove inappropriate reviews
-          - Manage categories and subcategories
-          - Approve/reject business ownership claims
-          - View platform-wide statistics
+          - View all users (searchable)
+          - View all businesses (searchable)
+          - Approve/reject business claim requests
+          - Verify/unverify businesses (adds verified badge)
+          - Resolve content reports
+          - View platform statistics
         </permissions>
         <protected_routes>
-          - /admin/* (platform admins only)
+          - /admin/*
         </protected_routes>
       </role>
     </user_roles>
     <authentication>
       <method>Email and password via Better Auth</method>
-      <features>
-        - Email verification on signup
-        - Password reset via email
-        - Session-based authentication
-        - Remember me functionality
-      </features>
+      <social_login>None (email only)</social_login>
     </authentication>
     <platform_role_implementation>
       <description>Add platform_role column to users table</description>
-      <values>null (default/user), 'admin'</values>
-      <note>Business owner mode is determined by having claimed/owned businesses, not a separate role</note>
+      <values>null or 'user' (default), 'admin' for admins</values>
+      <note>Business owner mode is determined by having claimed businesses, not a separate role. Manually edit database to set admin role.</note>
     </platform_role_implementation>
+    <business_claiming>
+      <process>Request + Admin Approval</process>
+      <flow>
+        1. Signed-in user clicks "Claim this business"
+        2. Claim request created with status "pending"
+        3. Admin reviews in admin dashboard
+        4. Admin approves or rejects
+        5. If approved, user becomes owner of that listing
+        6. Business can then be verified separately by admin
+      </flow>
+    </business_claiming>
+    <verification>
+      <process>Manual process outside platform</process>
+      <description>Business owners contact support, admin manually sets verified status</description>
+      <display>Verified badge shown next to verified businesses</display>
+      <review_responses>Only verified business owners can respond to reviews</review_responses>
+    </verification>
+    <review_limits>One review per user per business (can edit existing)</review_limits>
+    <deletion_policy>Hard delete - permanently removed along with related data</deletion_policy>
   </security_and_access_control>
 
   <core_features>
@@ -131,935 +167,738 @@
       - Remove OpenRouter configuration and environment variables
       - Remove chat page (/chat) and API route (/api/chat)
       - Remove AI-related components
-      - Remove Google OAuth provider from Better Auth config
-      - Implement email/password authentication
-      - Add email verification flow
-      - Add password reset flow
-      - Update all branding from 'Agentic Coding Boilerplate' to 'Business Finder'
+      - Update all branding from boilerplate to 'Business Finder'
       - Remove unused components (setup-checklist, starter-prompt-modal, diagnostics)
       - Clean up package.json and remove unused dependencies
-      - Update environment variable documentation
     </boilerplate_cleanup>
 
-    <authentication priority="2">
-      - Email/password signup with validation
-      - Email verification with confirmation link
-      - Sign in with email/password
-      - Sign out with session cleanup
-      - Password reset request via email
-      - Password reset completion with token
-      - Session management and persistence
-      - Remember me functionality
-      - Protected route middleware
-      - Auth state context provider
-      - Profile page with user info
-      - Profile editing (name, avatar)
-      - Password change from settings
-      - Account deletion with confirmation
-    </authentication>
+    <branding_and_layout priority="2">
+      - New header component with logo, search bar, user menu
+      - New footer component with country selector, links, copyright
+      - Light/dark mode toggle with persistence
+      - Clean minimal Airbnb-style layout
+      - Responsive mobile navigation (hamburger menu)
+    </branding_and_layout>
 
-    <glassmorphism_design priority="3">
-      - Glassmorphism design tokens in Tailwind config
-      - Glass card component with backdrop blur
-      - Glass button variants
-      - Glass input fields
-      - Glass navigation bar
-      - Glass sidebar component
-      - Glass modal/dialog
-      - Warm color palette implementation (oranges, ambers, warm grays)
-      - Dark mode glassmorphism variants
-      - Consistent border and shadow styles
-      - Smooth transitions and hover effects
-      - Loading skeleton with glass effect
-    </glassmorphism_design>
-
-    <categories priority="4">
-      - Categories table with name, slug, icon, order
-      - Subcategories table with parent relationship
+    <categories priority="3">
+      - Two-level category hierarchy (parent > child)
+      - Categories table with name, slug, icon, parent_id
       - Seed database with common business categories
-      - Category grid/list display on browse page
-      - Subcategory navigation
-      - Category selection in business forms (multi-select)
-      - Admin: Add new category
-      - Admin: Edit category (name, icon, order)
-      - Admin: Delete category (with validation)
-      - Admin: Add/edit/delete subcategories
-      - Admin: Reorder categories via drag-drop or arrows
+      - Category grid display on browse page
+      - Category selection when adding businesses
     </categories>
 
-    <business_listings priority="5">
-      - Business table with all fields
-      - Create business listing form (multi-step or single page)
-      - Business name and description (rich text)
-      - Contact information (phone, email, website)
-      - Address input with country selection
-      - Coordinates storage (latitude, longitude)
-      - Operating hours per day of week
-      - Special hours (holidays, exceptions)
-      - Products/services list
-      - Photo upload (multiple images)
-      - Photo gallery management (reorder, delete, set primary)
-      - Social media links
-      - Category and subcategory selection
-      - Edit business listing
-      - Delete business listing with confirmation
-      - Business detail page
-      - Business card component for lists
-      - "Open now" indicator based on hours
-      - Contact action buttons (call, email, directions)
-      - Share business functionality
-      - Report business (for inappropriate content)
-      - Search vector (tsvector) for full-text search
+    <business_listings priority="4">
+      - Full business detail page
+      - Business name, description, address
+      - Full contact info (phone, email, website, social media links)
+      - Operating hours (full schedule for each day, holiday hours)
+      - Business photos (multiple, with primary photo)
+      - Location on map (Leaflet + OpenStreetMap)
+      - Category assignment (2-level)
+      - Verified badge for verified businesses
+      - Claimed status indicator
+      - Add new business (signed-in users)
+      - Edit business (owner or creator)
+      - Delete business (owner or admin) - hard delete
+      - Upload business photos
+      - Social sharing buttons (Facebook, Twitter/X, WhatsApp, copy link)
     </business_listings>
 
-    <business_verification priority="6">
-      - is_verified field on businesses
-      - is_claimed field on businesses
-      - owner_id relationship to users
-      - Verified badge component
-      - "Claim this business" button for unclaimed listings
-      - Claim submission form
-      - Business claims table
-      - Admin: View pending claims
-      - Admin: Approve claim (sets owner_id)
-      - Admin: Reject claim with reason
-      - Admin: Toggle verification status
-      - Verification badge display on cards and detail pages
-    </business_verification>
-
-    <search_and_discovery priority="7">
-      - Search bar component with icon
-      - Full-text search using PostgreSQL tsvector
-      - Search results page
-      - Search result cards with key info
-      - Sort by relevance
-      - Sort by distance (when location available)
-      - Sort by rating (highest first)
-      - Sort by newest
+    <search_and_discovery priority="5">
+      - Homepage focused on discoverability
+      - Prominent search bar
+      - PostgreSQL full-text search with tsvector and materialized views
+      - Semantic/relevance-based results sorted by relevance score
+      - Search results page with list/grid view
+      - Map view with markers (Leaflet + OpenStreetMap)
       - Filter by category
-      - Filter by subcategory
-      - Filter by open now
-      - Filter by verified only
-      - Filter by rating threshold
-      - Auto-expand distance (start close, expand until results found)
-      - Location detection via browser Geolocation API
-      - IP-based location fallback
-      - Country detection and default
-      - Country selector dropdown
-      - Country persistence in localStorage
-      - "Near me" results section
-      - Map view with markers
-      - Map marker clustering for many results
-      - Search suggestions/autocomplete
-      - Recent searches (localStorage)
-      - Empty state for no results
-      - Pagination or infinite scroll
+      - Filter by country
+      - Filter by distance (nearby)
+      - Sort options (relevance, rating, distance)
+      - Featured/highlighted local businesses on homepage
+      - Businesses with good reviews showcased
+      - Upcoming events section on homepage
+      - Browse by category page
     </search_and_discovery>
 
-    <homepage priority="8">
-      - Discovery-first layout with prominent search
-      - Search bar in hero section
-      - Featured/trending businesses section
-      - Businesses with high views and good ratings
-      - Upcoming events near user
-      - Browse by category section
-      - Recently added businesses
-      - Location-aware content based on detected country
-      - Responsive hero design
-    </homepage>
+    <geolocation priority="6">
+      - Browser Geolocation API for user location
+      - IP-based country detection for default country
+      - Calculate distance between user and businesses
+      - Distance display from user location
+      - "Near me" functionality
+      - Country selector in footer
+      - Country persistence in localStorage
+    </geolocation>
 
-    <reviews_system priority="9">
-      - Reviews table (user_id, business_id, rating, content, timestamps)
-      - Star rating input component (1-5 stars)
-      - Review text input with character limit
-      - Submit review (one per user per business)
+    <reviews_system priority="7">
+      - 5-star rating system
+      - Review text content
+      - Review photos (multiple per review)
+      - One review per user per business (enforced)
       - Edit own review
       - Delete own review
-      - Review list on business detail page
-      - Review card component
-      - Sort reviews (newest, highest rated, lowest rated)
-      - Filter reviews by rating
-      - Helpful/unhelpful voting on reviews
-      - Report review for moderation
-      - Review reports table
+      - Review responses from verified business owners only
+      - Reviews displayed with user info and date
       - Average rating calculation and display
-      - Rating distribution chart (bar chart)
-      - Review count display
-      - Business owner response field
-      - Response UI display (indented under review)
-      - Review validation (min/max length)
+      - Report inappropriate reviews
     </reviews_system>
 
-    <events_system priority="10">
-      - Events table with all fields
-      - Create event form
-      - Event name and description
-      - Event date and time
-      - Event location (same as business or custom address)
-      - Event type (informational vs RSVP required)
-      - RSVP enabled toggle
-      - RSVP limit (optional)
-      - Event photos
-      - Edit event
-      - Delete event
-      - Cancel event (different from delete, marks as cancelled)
-      - Event detail page
-      - Event card component
-      - RSVP button (for RSVP-enabled events)
-      - RSVP count display
-      - User RSVP status indicator
-      - Un-RSVP functionality
-      - Events browse page (/events)
-      - Filter events by date range
-      - Filter events by category (business category)
+    <favorites priority="8">
+      - Add business to favorites
+      - Remove from favorites
+      - View all favorites in user dashboard
+      - Favorite count display on business cards
+    </favorites>
+
+    <events_system priority="9">
+      - Events listed on business page
+      - Dedicated events page (all upcoming events in area)
+      - Event categories (Live Music, Market, Workshop, etc.)
+      - Event title, description, date/time
+      - Optional RSVP requirement
+      - RSVP button and count display
+      - User can view their RSVPs
+      - Cancel RSVP
+      - Create event (business owner)
+      - Edit event (business owner)
+      - Delete event (business owner)
+      - Filter events by date
+      - Filter events by category
       - Filter events by location/distance
-      - Events near me section
-      - Upcoming events on homepage
-      - Add to calendar button (generates .ics file)
-      - Share event functionality
-      - Event RSVPs table (user_id, event_id)
     </events_system>
+
+    <promotions priority="10">
+      - View active promotions on business page
+      - Promotion title and description
+      - Validity dates (valid_from, valid_until)
+      - Create promotion (business owner)
+      - Edit promotion (business owner)
+      - Delete promotion (business owner)
+    </promotions>
 
     <user_dashboard priority="11">
       - Dashboard layout with navigation
-      - "My Reviews" section listing reviews written
-      - Edit/delete review from dashboard
-      - "My Favorites" section listing saved businesses
-      - Favorite/unfavorite button on business cards
-      - Remove from favorites
-      - "My RSVPs" section listing RSVP'd events
-      - Notifications bell icon with unread count
-      - Notifications dropdown/page
-      - Notification types (new response to review, etc.)
-      - Mark notification as read
-      - Mark all as read
-      - Notifications table (user_id, type, data, read_at)
-      - Settings page
-      - Location preferences (default country)
-      - Notification preferences
-      - Account settings link
-      - Switch to business owner mode toggle
+      - View all my reviews (edit/delete)
+      - View all favorites
+      - Recently viewed businesses
+      - My RSVPs list
+      - In-app notifications center
     </user_dashboard>
 
     <business_owner_dashboard priority="12">
-      - Business owner dashboard layout
-      - "My Listings" overview with cards
-      - Add new listing button
-      - Listing cards showing key stats (views, rating)
-      - Combined statistics across all listings
-      - Total impressions chart (line chart over time)
-      - Total views chart (line chart over time)
-      - Average rating display with trend indicator
-      - Reviews section (all reviews across listings)
-      - Quick respond to review from dashboard
-      - Response form modal
-      - Views by source breakdown (search, direct, category browse)
-      - Views by location breakdown (by country/region)
-      - Views by device breakdown (mobile, desktop, tablet)
-      - Comparison between listings
-      - Click-through rate display
-      - Top performing listing highlight
-      - Recent activity feed
-      - Quick actions (edit listing, view analytics)
-      - Individual listing detail page
-      - Listing-specific statistics
-      - Listing-specific reviews list
-      - Edit listing quick access
+      - Toggle between normal mode and business owner mode
+      - View all owned/claimed listings
+      - Comprehensive analytics:
+        - Impressions over time
+        - Views over time
+        - Click data
+        - Review trends
+        - Time period comparison
+      - Recent reviews widget
+      - Respond to reviews (verified businesses only)
+      - Manage events for businesses
+      - Manage promotions for businesses
     </business_owner_dashboard>
 
-    <analytics_tracking priority="13">
-      - Business analytics table (impressions, views with metadata)
-      - Track impression when business appears in search results
-      - Track view when business detail page visited
-      - Store source (search, category, direct, map)
-      - Store user location (country, region if available)
-      - Store device type (mobile, desktop, tablet)
-      - Store timestamp
-      - Aggregate statistics calculation
-      - Charts using Recharts library
-      - Date range selector for charts
-      - Export analytics data (CSV)
-    </analytics_tracking>
+    <admin_dashboard priority="13">
+      - Admin dashboard layout with sidebar
+      - Platform statistics overview
+      - View all users (searchable)
+      - View user details
+      - View all businesses (searchable)
+      - Verify business (toggle verified badge)
+      - Remove verification
+      - View pending claim requests
+      - Approve/reject claims
+      - View reports queue
+      - Resolve/dismiss reports
+      - Admin-only route protection
+    </admin_dashboard>
 
-    <platform_admin priority="14">
-      - Admin layout with sidebar navigation
-      - Admin dashboard overview
-      - Total users count with trend
-      - Total businesses count with trend
-      - Total reviews count
-      - New users chart (over time)
-      - New businesses chart (over time)
-      - Users management page
-      - Users table with search and pagination
-      - User detail view
-      - Edit user role (set as admin)
-      - Deactivate/reactivate user
-      - Businesses management page
-      - Businesses table with search and filters
-      - Business detail view (admin version)
-      - Edit business (admin override)
-      - Delete business
-      - Verify business (toggle)
-      - Flag business for review
-      - Reviews moderation page
-      - Reported reviews queue
-      - View report details
-      - Dismiss report
-      - Remove review (with reason)
-      - Categories management page
-      - Categories list with CRUD
-      - Subcategories management
-      - Business claims page
-      - Claims queue with approve/reject
-      - Platform statistics and health
-    </platform_admin>
-
-    <navigation_and_layout priority="15">
-      - Top navigation bar (all pages)
-      - Logo and brand
-      - Search bar in header
-      - Country selector in header
-      - Auth buttons (Sign in/Sign up) or user menu
-      - User dropdown menu (profile, settings, sign out)
-      - Business owner mode toggle in user menu
-      - Contextual sidebar for dashboard pages
-      - Sidebar for user dashboard
-      - Sidebar for business owner dashboard
-      - Sidebar for admin pages
-      - Mobile responsive navigation
-      - Hamburger menu on mobile
-      - Breadcrumbs on interior pages
-      - Footer with links
-    </navigation_and_layout>
-
-    <location_and_internationalization priority="16">
-      - Browser Geolocation API integration
-      - IP-based geolocation fallback service
-      - Country detection on first visit
-      - Countries table or enum
-      - Country selector component
-      - Country flag icons
-      - Country persistence (localStorage)
-      - Distance calculations (Haversine formula)
-      - Distance unit preference (km/miles)
-      - Address formatting by country
-      - Phone number display formatting
-      - Timezone handling for event times
-    </location_and_internationalization>
-
-    <ui_ux_polish priority="17">
-      - Loading skeletons for all data-loading states
-      - Error boundary component
-      - 404 page design
-      - 500 error page design
-      - Empty states for all lists
-      - Confirmation dialogs for destructive actions
-      - Form validation with field-level errors
-      - Success states and feedback
-      - Smooth page transitions
-      - Hover effects on interactive elements
-      - Focus states for accessibility
-      - Keyboard navigation support
-      - Skip to main content link
-      - Alt text for all images
-      - ARIA labels for icon buttons
-      - Image optimization and lazy loading
-    </ui_ux_polish>
-
-    <notifications_system priority="18">
-      - In-app notification bell
-      - Unread notification count badge
-      - Notifications dropdown
-      - Notification types:
-        - New review on your business
-        - Response to your review
-        - Business claim approved/rejected
-        - Business verified
-      - Mark as read on view
-      - Mark all as read button
-      - Notification preferences (toggle each type)
-      - Real-time updates (polling or WebSocket - start with polling)
+    <notifications_system priority="14">
+      - In-app notification center (no email)
+      - Notification bell with unread count
+      - Mark as read
+      - Mark all as read
+      - Click notification to navigate
+      - Notification types: new review, claim status, RSVP confirmation
+      - Delete notification
     </notifications_system>
+
+    <reporting priority="15">
+      - Report inappropriate review
+      - Report inappropriate business listing
+      - Report reason selection
+      - Admin report queue
+      - Resolve/dismiss reports
+    </reporting>
+
+    <ui_features priority="16">
+      - Light/dark mode toggle with persistence
+      - Responsive design (desktop, tablet, mobile)
+      - Loading states for async operations
+      - Error states with user-friendly messages
+      - Empty states when no data
+      - Toast notifications for actions (Sonner)
+      - Modal dialogs for confirmations
+      - Form validation with field-level errors
+      - Image upload with preview
+      - Infinite scroll/pagination
+      - Mobile navigation menu
+    </ui_features>
   </core_features>
 
   <database_schema>
+    <notes>
+      - All custom tables use UUID for primary keys
+      - Better Auth tables use text type for IDs (do not modify)
+      - Timestamps use timestamptz
+    </notes>
+
     <tables>
       <users>
-        - id (uuid, primary key)
-        - name (text)
-        - email (text, unique)
-        - email_verified (boolean)
-        - image (text, nullable)
-        - platform_role (text, nullable - null means regular user, 'admin' for admins)
-        - preferred_country (text, nullable)
-        - created_at (timestamp)
-        - updated_at (timestamp)
+        - Extended from Better Auth user table
+        - platform_role: text (null, 'user', or 'admin')
+        - avatar_url: text
       </users>
-      <sessions>
-        - Better Auth managed
-      </sessions>
-      <accounts>
-        - Better Auth managed
-      </accounts>
-      <verification>
-        - Better Auth managed (email verification tokens)
-      </verification>
+
+      <countries>
+        - id: uuid
+        - name: text
+        - code: text (ISO country code)
+        - flag_emoji: text
+      </countries>
+
       <categories>
-        - id (uuid, primary key)
-        - name (text)
-        - slug (text, unique)
-        - icon (text, nullable - lucide icon name)
-        - description (text, nullable)
-        - display_order (integer)
-        - created_at (timestamp)
+        - id: uuid
+        - name: text
+        - slug: text (unique)
+        - parent_id: uuid (nullable, references categories for 2-level hierarchy)
+        - icon: text (lucide icon name)
+        - display_order: integer
+        - created_at: timestamptz
       </categories>
-      <subcategories>
-        - id (uuid, primary key)
-        - category_id (uuid, foreign key)
-        - name (text)
-        - slug (text)
-        - display_order (integer)
-      </subcategories>
+
       <businesses>
-        - id (uuid, primary key)
-        - owner_id (uuid, foreign key to users, nullable)
-        - name (text)
-        - slug (text, unique)
-        - description (text)
-        - phone (text, nullable)
-        - email (text, nullable)
-        - website (text, nullable)
-        - address_line1 (text)
-        - address_line2 (text, nullable)
-        - city (text)
-        - state_province (text, nullable)
-        - postal_code (text, nullable)
-        - country_code (text)
-        - latitude (decimal)
-        - longitude (decimal)
-        - is_verified (boolean, default false)
-        - is_claimed (boolean, default false)
-        - is_active (boolean, default true)
-        - search_vector (tsvector)
-        - created_at (timestamp)
-        - updated_at (timestamp)
+        - id: uuid
+        - name: text
+        - slug: text (unique)
+        - description: text
+        - address: text
+        - city: text
+        - state_province: text
+        - postal_code: text
+        - latitude: decimal
+        - longitude: decimal
+        - phone: text
+        - email: text
+        - website: text
+        - social_links: jsonb (facebook, twitter, instagram, etc.)
+        - country_id: uuid (references countries)
+        - category_id: uuid (references categories)
+        - owner_id: text (references users, nullable - set when claimed)
+        - created_by: text (references users)
+        - is_verified: boolean (default false)
+        - is_claimed: boolean (default false)
+        - search_vector: tsvector
+        - created_at: timestamptz
+        - updated_at: timestamptz
       </businesses>
-      <business_categories>
-        - business_id (uuid, foreign key)
-        - category_id (uuid, foreign key)
-        - subcategory_id (uuid, foreign key, nullable)
-        - primary key (business_id, category_id)
-      </business_categories>
+
       <business_hours>
-        - id (uuid, primary key)
-        - business_id (uuid, foreign key)
-        - day_of_week (integer, 0-6)
-        - open_time (time, nullable)
-        - close_time (time, nullable)
-        - is_closed (boolean, default false)
+        - id: uuid
+        - business_id: uuid (references businesses)
+        - day_of_week: integer (0-6, Sunday-Saturday)
+        - open_time: time
+        - close_time: time
+        - is_closed: boolean
       </business_hours>
-      <business_special_hours>
-        - id (uuid, primary key)
-        - business_id (uuid, foreign key)
-        - date (date)
-        - open_time (time, nullable)
-        - close_time (time, nullable)
-        - is_closed (boolean)
-        - reason (text, nullable)
-      </business_special_hours>
-      <business_services>
-        - id (uuid, primary key)
-        - business_id (uuid, foreign key)
-        - name (text)
-        - description (text, nullable)
-        - price (text, nullable)
-        - display_order (integer)
-      </business_services>
+
       <business_photos>
-        - id (uuid, primary key)
-        - business_id (uuid, foreign key)
-        - url (text)
-        - alt_text (text, nullable)
-        - is_primary (boolean, default false)
-        - display_order (integer)
-        - created_at (timestamp)
+        - id: uuid
+        - business_id: uuid (references businesses)
+        - url: text
+        - caption: text
+        - is_primary: boolean
+        - uploaded_by: text (references users)
+        - created_at: timestamptz
       </business_photos>
-      <business_social_links>
-        - id (uuid, primary key)
-        - business_id (uuid, foreign key)
-        - platform (text - facebook, instagram, twitter, linkedin, etc.)
-        - url (text)
-      </business_social_links>
-      <events>
-        - id (uuid, primary key)
-        - business_id (uuid, foreign key)
-        - name (text)
-        - description (text)
-        - event_date (timestamp)
-        - end_date (timestamp, nullable)
-        - location_same_as_business (boolean, default true)
-        - custom_address (text, nullable)
-        - custom_latitude (decimal, nullable)
-        - custom_longitude (decimal, nullable)
-        - requires_rsvp (boolean, default false)
-        - rsvp_limit (integer, nullable)
-        - is_cancelled (boolean, default false)
-        - created_at (timestamp)
-        - updated_at (timestamp)
-      </events>
-      <event_photos>
-        - id (uuid, primary key)
-        - event_id (uuid, foreign key)
-        - url (text)
-        - display_order (integer)
-      </event_photos>
-      <event_rsvps>
-        - id (uuid, primary key)
-        - event_id (uuid, foreign key)
-        - user_id (uuid, foreign key)
-        - created_at (timestamp)
-        - unique constraint (event_id, user_id)
-      </event_rsvps>
+
       <reviews>
-        - id (uuid, primary key)
-        - business_id (uuid, foreign key)
-        - user_id (uuid, foreign key)
-        - rating (integer, 1-5)
-        - content (text)
-        - owner_response (text, nullable)
-        - owner_response_at (timestamp, nullable)
-        - created_at (timestamp)
-        - updated_at (timestamp)
-        - unique constraint (business_id, user_id)
+        - id: uuid
+        - business_id: uuid (references businesses)
+        - user_id: text (references users)
+        - rating: integer (1-5)
+        - text: text
+        - created_at: timestamptz
+        - updated_at: timestamptz
+        - UNIQUE constraint on (business_id, user_id)
       </reviews>
-      <review_votes>
-        - id (uuid, primary key)
-        - review_id (uuid, foreign key)
-        - user_id (uuid, foreign key)
-        - is_helpful (boolean)
-        - unique constraint (review_id, user_id)
-      </review_votes>
-      <review_reports>
-        - id (uuid, primary key)
-        - review_id (uuid, foreign key)
-        - reporter_id (uuid, foreign key to users)
-        - reason (text)
-        - status (text - pending, dismissed, removed)
-        - admin_notes (text, nullable)
-        - created_at (timestamp)
-        - resolved_at (timestamp, nullable)
-      </review_reports>
+
+      <review_photos>
+        - id: uuid
+        - review_id: uuid (references reviews)
+        - url: text
+        - created_at: timestamptz
+      </review_photos>
+
+      <review_responses>
+        - id: uuid
+        - review_id: uuid (references reviews, unique - one response per review)
+        - business_id: uuid (references businesses)
+        - responder_id: text (references users)
+        - text: text
+        - created_at: timestamptz
+        - updated_at: timestamptz
+      </review_responses>
+
       <favorites>
-        - id (uuid, primary key)
-        - user_id (uuid, foreign key)
-        - business_id (uuid, foreign key)
-        - created_at (timestamp)
-        - unique constraint (user_id, business_id)
+        - id: uuid
+        - user_id: text (references users)
+        - business_id: uuid (references businesses)
+        - created_at: timestamptz
+        - UNIQUE constraint on (user_id, business_id)
       </favorites>
+
+      <event_categories>
+        - id: uuid
+        - name: text
+        - slug: text (unique)
+        - icon: text
+      </event_categories>
+
+      <events>
+        - id: uuid
+        - business_id: uuid (references businesses)
+        - title: text
+        - description: text
+        - event_category_id: uuid (references event_categories)
+        - start_datetime: timestamptz
+        - end_datetime: timestamptz
+        - requires_rsvp: boolean (default false)
+        - created_at: timestamptz
+        - updated_at: timestamptz
+      </events>
+
+      <event_rsvps>
+        - id: uuid
+        - event_id: uuid (references events)
+        - user_id: text (references users)
+        - created_at: timestamptz
+        - UNIQUE constraint on (event_id, user_id)
+      </event_rsvps>
+
       <business_claims>
-        - id (uuid, primary key)
-        - business_id (uuid, foreign key)
-        - user_id (uuid, foreign key)
-        - status (text - pending, approved, rejected)
-        - verification_details (text)
-        - admin_notes (text, nullable)
-        - created_at (timestamp)
-        - resolved_at (timestamp, nullable)
+        - id: uuid
+        - business_id: uuid (references businesses)
+        - user_id: text (references users)
+        - status: text ('pending', 'approved', 'rejected')
+        - created_at: timestamptz
+        - reviewed_at: timestamptz
+        - reviewed_by: text (references users, nullable)
       </business_claims>
-      <business_analytics>
-        - id (uuid, primary key)
-        - business_id (uuid, foreign key)
-        - event_type (text - impression, view)
-        - source (text - search, category, direct, map, etc.)
-        - country (text, nullable)
-        - region (text, nullable)
-        - device_type (text - desktop, mobile, tablet)
-        - user_id (uuid, nullable - for logged in users)
-        - session_id (text - for anonymous tracking)
-        - created_at (timestamp)
-      </business_analytics>
+
+      <promotions>
+        - id: uuid
+        - business_id: uuid (references businesses)
+        - title: text
+        - description: text
+        - valid_from: timestamptz
+        - valid_until: timestamptz
+        - created_at: timestamptz
+        - updated_at: timestamptz
+      </promotions>
+
+      <business_views>
+        - id: uuid
+        - business_id: uuid (references businesses)
+        - user_id: text (references users, nullable for anonymous)
+        - viewed_at: timestamptz
+        - source: text ('search', 'browse', 'direct', 'event')
+      </business_views>
+
       <notifications>
-        - id (uuid, primary key)
-        - user_id (uuid, foreign key)
-        - type (text - review_received, review_response, claim_approved, claim_rejected, business_verified)
-        - title (text)
-        - message (text)
-        - data (jsonb - related entity IDs)
-        - read_at (timestamp, nullable)
-        - created_at (timestamp)
+        - id: uuid
+        - user_id: text (references users)
+        - type: text ('review', 'claim_approved', 'claim_rejected', 'rsvp', etc.)
+        - title: text
+        - message: text
+        - data: jsonb (additional context like business_id, review_id)
+        - is_read: boolean (default false)
+        - created_at: timestamptz
       </notifications>
-      <notification_preferences>
-        - id (uuid, primary key)
-        - user_id (uuid, foreign key, unique)
-        - review_received (boolean, default true)
-        - review_response (boolean, default true)
-        - claim_status (boolean, default true)
-        - business_verified (boolean, default true)
-      </notification_preferences>
+
+      <reports>
+        - id: uuid
+        - reporter_id: text (references users)
+        - reportable_type: text ('business', 'review')
+        - reportable_id: uuid
+        - reason: text
+        - status: text ('pending', 'resolved', 'dismissed')
+        - resolved_by: text (references users, nullable)
+        - resolved_at: timestamptz
+        - created_at: timestamptz
+      </reports>
+
+      <recently_viewed>
+        - id: uuid
+        - user_id: text (references users)
+        - business_id: uuid (references businesses)
+        - viewed_at: timestamptz
+        - UNIQUE constraint on (user_id, business_id) with upsert on conflict
+      </recently_viewed>
+
+      <business_search_index>
+        - Materialized view for full-text search
+        - business_id: uuid
+        - search_vector: tsvector (name, description, category, address)
+        - Refreshed on business create/update
+      </business_search_index>
     </tables>
+
     <indexes>
       - businesses: search_vector (GIN index for full-text search)
       - businesses: (latitude, longitude) for location queries
-      - businesses: country_code for country filtering
-      - business_analytics: (business_id, created_at) for time-series queries
+      - businesses: country_id for country filtering
+      - business_views: (business_id, viewed_at) for time-series analytics
       - reviews: business_id for review lookups
-      - events: (business_id, event_date) for event queries
-      - notifications: (user_id, read_at) for unread counts
+      - events: (business_id, start_datetime) for event queries
+      - notifications: (user_id, is_read) for unread counts
     </indexes>
   </database_schema>
 
   <api_endpoints_summary>
+    <note>Using Next.js Server Actions for most mutations. API routes for complex queries.</note>
+
     <auth>
-      - POST /api/auth/sign-up
-      - POST /api/auth/sign-in
-      - POST /api/auth/sign-out
-      - POST /api/auth/forgot-password
-      - POST /api/auth/reset-password
-      - GET /api/auth/verify-email
-      - GET /api/auth/session
+      - Better Auth handles: /api/auth/*
     </auth>
-    <users>
-      - GET /api/users/me
-      - PATCH /api/users/me
-      - DELETE /api/users/me
-      - PATCH /api/users/me/password
-      - GET /api/users/me/notifications
-      - PATCH /api/users/me/notifications/:id/read
-      - PATCH /api/users/me/notifications/read-all
-      - GET /api/users/me/notification-preferences
-      - PATCH /api/users/me/notification-preferences
-    </users>
+
     <businesses>
-      - GET /api/businesses (list with search, filters, pagination)
-      - GET /api/businesses/:id
-      - POST /api/businesses
-      - PATCH /api/businesses/:id
-      - DELETE /api/businesses/:id
-      - GET /api/businesses/:id/reviews
-      - GET /api/businesses/:id/events
-      - GET /api/businesses/:id/analytics (owner only)
-      - POST /api/businesses/:id/claim
-      - POST /api/businesses/:id/report
+      - GET /api/businesses (list with filters, search, pagination)
+      - GET /api/businesses/[slug] (detail)
+      - GET /api/businesses/nearby (geolocation query)
+      - Server Action: createBusiness
+      - Server Action: updateBusiness
+      - Server Action: deleteBusiness
+      - Server Action: claimBusiness
     </businesses>
+
     <reviews>
-      - POST /api/reviews
-      - PATCH /api/reviews/:id
-      - DELETE /api/reviews/:id
-      - POST /api/reviews/:id/vote
-      - POST /api/reviews/:id/report
-      - POST /api/reviews/:id/respond (owner only)
+      - GET /api/businesses/[slug]/reviews
+      - Server Action: createReview
+      - Server Action: updateReview
+      - Server Action: deleteReview
+      - Server Action: respondToReview
     </reviews>
+
     <events>
-      - GET /api/events (browse all events)
-      - GET /api/events/:id
-      - POST /api/events
-      - PATCH /api/events/:id
-      - DELETE /api/events/:id
-      - POST /api/events/:id/rsvp
-      - DELETE /api/events/:id/rsvp
+      - GET /api/events (list with filters)
+      - GET /api/businesses/[slug]/events
+      - Server Action: createEvent
+      - Server Action: updateEvent
+      - Server Action: deleteEvent
+      - Server Action: rsvpToEvent
+      - Server Action: cancelRsvp
     </events>
+
     <favorites>
-      - GET /api/favorites
-      - POST /api/favorites
-      - DELETE /api/favorites/:businessId
+      - Server Action: addFavorite
+      - Server Action: removeFavorite
     </favorites>
-    <categories>
-      - GET /api/categories
-      - GET /api/categories/:id/subcategories
-    </categories>
-    <location>
-      - GET /api/location/detect (IP-based detection)
-      - GET /api/countries
-    </location>
-    <analytics>
-      - POST /api/analytics/track
-    </analytics>
+
+    <promotions>
+      - Server Action: createPromotion
+      - Server Action: updatePromotion
+      - Server Action: deletePromotion
+    </promotions>
+
     <admin>
-      - GET /api/admin/stats
       - GET /api/admin/users
-      - GET /api/admin/users/:id
-      - PATCH /api/admin/users/:id
       - GET /api/admin/businesses
-      - PATCH /api/admin/businesses/:id
-      - DELETE /api/admin/businesses/:id
-      - PATCH /api/admin/businesses/:id/verify
       - GET /api/admin/claims
-      - PATCH /api/admin/claims/:id
-      - GET /api/admin/review-reports
-      - PATCH /api/admin/review-reports/:id
-      - GET /api/admin/categories
-      - POST /api/admin/categories
-      - PATCH /api/admin/categories/:id
-      - DELETE /api/admin/categories/:id
-      - POST /api/admin/subcategories
-      - PATCH /api/admin/subcategories/:id
-      - DELETE /api/admin/subcategories/:id
+      - GET /api/admin/reports
+      - Server Action: approveClaim
+      - Server Action: rejectClaim
+      - Server Action: verifyBusiness
+      - Server Action: unverifyBusiness
+      - Server Action: resolveReport
     </admin>
+
+    <analytics>
+      - GET /api/business-dashboard/[businessId]/analytics
+      - Server Action: trackView
+    </analytics>
+
+    <notifications>
+      - GET /api/notifications
+      - Server Action: markAsRead
+      - Server Action: markAllAsRead
+      - Server Action: deleteNotification
+    </notifications>
+
+    <geolocation>
+      - GET /api/geo/country (IP-based country detection)
+    </geolocation>
   </api_endpoints_summary>
 
   <ui_layout>
     <main_structure>
-      - Top navigation bar (persistent)
-      - Main content area
-      - Contextual sidebar (dashboard/admin pages only)
-      - Footer (public pages)
+      Clean minimal design inspired by Airbnb:
+      - Minimal fixed header with logo, search, and user menu
+      - Full-width content area
+      - Footer with country selector, links, and copyright
+      - Mobile: hamburger menu with slide-out navigation
     </main_structure>
-    <navigation>
-      - Logo (left)
-      - Search bar (center)
-      - Country selector (right)
-      - Auth/user menu (right)
-    </navigation>
-    <public_pages>
-      - Homepage (discovery + search)
-      - Search results
-      - Browse by category
-      - Business detail page
-      - Events browse page
-      - Event detail page
-      - Sign in / Sign up pages
-    </public_pages>
-    <user_pages>
-      - User dashboard (with sidebar)
-      - My favorites
-      - My reviews
-      - My RSVPs
-      - Notifications
-      - Profile settings
-      - Account settings
-    </user_pages>
-    <business_owner_pages>
-      - Business owner dashboard (with sidebar)
-      - My listings overview
-      - Add/edit listing
-      - Listing analytics detail
-      - Respond to reviews
-    </business_owner_pages>
-    <admin_pages>
-      - Admin dashboard (with sidebar)
-      - Users management
-      - Businesses management
-      - Reviews moderation
-      - Categories management
-      - Claims queue
-    </admin_pages>
+
+    <key_pages>
+      - / (Homepage - discovery focused)
+      - /search (Search results with filters and map)
+      - /categories (Browse by category)
+      - /categories/[slug] (Category listing)
+      - /business/[slug] (Business detail)
+      - /events (All upcoming events)
+      - /events/[id] (Event detail)
+      - /auth/login
+      - /auth/register
+      - /dashboard (User dashboard)
+      - /dashboard/reviews (My reviews)
+      - /dashboard/favorites (My favorites)
+      - /dashboard/notifications (Notifications)
+      - /business-dashboard (Business owner dashboard)
+      - /business-dashboard/[businessId] (Specific business analytics)
+      - /admin (Admin dashboard)
+      - /admin/users
+      - /admin/businesses
+      - /admin/claims
+      - /admin/reports
+    </key_pages>
   </ui_layout>
 
   <implementation_steps>
     <step number="1">
-      <title>Boilerplate Cleanup and Branding</title>
+      <title>Boilerplate Cleanup</title>
       <tasks>
-        - Remove AI SDK packages and dependencies
-        - Remove chat page and API routes
-        - Remove OpenRouter configuration
-        - Remove unused components (diagnostics, setup-checklist, etc.)
-        - Update branding to Business Finder
-        - Clean up environment variables
-        - Update metadata and SEO tags
+        - Remove AI SDK and OpenRouter packages
+        - Remove chat page and AI-related components
+        - Remove AI-related API routes
+        - Clean up unused dependencies
+        - Remove unused boilerplate components
       </tasks>
     </step>
+
     <step number="2">
-      <title>Authentication System</title>
+      <title>Branding and Layout</title>
       <tasks>
-        - Remove Google OAuth from Better Auth config
-        - Implement email/password provider
-        - Create sign up page with validation
-        - Create sign in page
-        - Implement email verification flow
-        - Implement password reset flow
-        - Add platform_role column to users
-        - Update auth components for new flow
+        - Update branding to "Business Finder"
+        - Create new header component with navigation
+        - Create new footer component with country selector
+        - Implement light/dark mode toggle
+        - Set up responsive navigation
+        - Apply clean minimal Airbnb-style design
       </tasks>
     </step>
+
     <step number="3">
-      <title>Glassmorphism Design System</title>
+      <title>Database Schema</title>
       <tasks>
-        - Define design tokens in Tailwind config
-        - Create glass utility classes
-        - Implement warm color palette
-        - Update all UI components with glass variants
-        - Redesign header and footer
-        - Create consistent button styles
-        - Design form inputs with glass effect
-        - Implement dark mode variants
+        - Extend user table with platform_role
+        - Create all new tables with Drizzle
+        - Set up relationships and constraints
+        - Create materialized view for search
+        - Seed countries and categories data
+        - Seed event categories
       </tasks>
     </step>
+
     <step number="4">
-      <title>Database Schema and Categories</title>
+      <title>Core Business Features</title>
       <tasks>
-        - Create all database tables with Drizzle
-        - Set up indexes for performance
-        - Create migration files
-        - Seed categories with common business types
-        - Seed subcategories
-        - Test database connections and queries
+        - Business listing CRUD
+        - Business detail page
+        - Category browsing (2-level)
+        - Photo upload for businesses
+        - Operating hours management
+        - Social links and contact info
       </tasks>
     </step>
+
     <step number="5">
-      <title>Business Listings Core</title>
-      <tasks>
-        - Implement business CRUD API
-        - Create business form (multi-step)
-        - Implement photo upload
-        - Create business detail page
-        - Implement business cards
-        - Add operating hours management
-        - Implement services/products
-        - Add social links
-      </tasks>
-    </step>
-    <step number="6">
       <title>Search and Discovery</title>
       <tasks>
-        - Set up PostgreSQL full-text search
-        - Implement search API with filters
-        - Create search results page
-        - Implement category browsing
-        - Add location detection (browser + IP)
-        - Implement country selector
-        - Add map integration with Leaflet
-        - Create homepage with discovery features
+        - Implement PostgreSQL full-text search with materialized views
+        - Build search results page with filters
+        - Integrate Leaflet map with OpenStreetMap
+        - Implement geolocation features
+        - Country detection and selector
+        - Distance calculations
       </tasks>
     </step>
-    <step number="7">
-      <title>Reviews System</title>
+
+    <step number="6">
+      <title>Reviews and Favorites</title>
       <tasks>
-        - Implement reviews API
-        - Create star rating component
-        - Create review form
-        - Display reviews on business page
-        - Implement review voting
-        - Add review reporting
-        - Implement business owner responses
-        - Calculate and display ratings
+        - Review creation and management
+        - Star rating component
+        - Review photo uploads
+        - One review per business enforcement
+        - Favorites functionality
+        - Review responses for verified owners
       </tasks>
     </step>
-    <step number="8">
+
+    <step number="7">
       <title>Events System</title>
       <tasks>
-        - Implement events API
-        - Create event form
-        - Implement RSVP functionality
-        - Create events browse page
-        - Add event cards
-        - Implement event detail page
-        - Add calendar export
-        - Display events on homepage
+        - Event CRUD for business owners
+        - Event categories
+        - RSVP functionality
+        - Events listing page
+        - Events on business pages
+        - Filter by date/category/location
       </tasks>
     </step>
+
+    <step number="8">
+      <title>Promotions</title>
+      <tasks>
+        - Promotion CRUD for business owners
+        - Validity date handling
+        - Display on business pages
+      </tasks>
+    </step>
+
     <step number="9">
       <title>User Dashboard</title>
       <tasks>
-        - Create dashboard layout with sidebar
-        - Implement favorites functionality
-        - Display user's reviews
-        - Display user's RSVPs
-        - Create notifications system
-        - Implement settings pages
-        - Add notification preferences
+        - Dashboard layout
+        - My reviews management
+        - Favorites list
+        - Recently viewed
+        - My RSVPs
       </tasks>
     </step>
+
     <step number="10">
       <title>Business Owner Dashboard</title>
       <tasks>
-        - Create business owner dashboard layout
-        - Display all owned listings
-        - Implement analytics tracking
-        - Create analytics charts with Recharts
-        - Add source/location/device breakdowns
-        - Implement review management
-        - Add quick response functionality
+        - Business owner mode toggle
+        - Analytics views and charts with Recharts
+        - Review management and responses
+        - Event management
+        - Promotion management
+        - Comprehensive metrics display
       </tasks>
     </step>
+
     <step number="11">
-      <title>Business Verification and Claims</title>
+      <title>Business Claiming and Verification</title>
       <tasks>
-        - Implement claim submission
-        - Create claims management for admin
-        - Implement verification toggle
-        - Display verified badge
-        - Add claim status notifications
+        - Claim request flow
+        - Admin claim review
+        - Verification badge display
+        - Owner permissions enforcement
+        - Review response restriction to verified only
       </tasks>
     </step>
+
     <step number="12">
-      <title>Platform Admin</title>
+      <title>Admin Dashboard</title>
       <tasks>
-        - Create admin layout
-        - Implement admin dashboard with stats
-        - Create users management
-        - Create businesses management
-        - Implement review moderation
-        - Create categories management
-        - Add claims queue
+        - Admin layout and navigation
+        - User management
+        - Business management
+        - Claim queue
+        - Report queue
+        - Platform statistics
       </tasks>
     </step>
+
     <step number="13">
-      <title>Polish and Optimization</title>
+      <title>Notifications and Reporting</title>
       <tasks>
-        - Add loading states and skeletons
-        - Implement error boundaries
-        - Create 404 and error pages
-        - Add empty states
-        - Optimize images and performance
-        - Add accessibility features
-        - Test responsive design
-        - Fix edge cases
+        - In-app notification system
+        - Notification bell and list
+        - Report submission
+        - Report resolution
+      </tasks>
+    </step>
+
+    <step number="14">
+      <title>Homepage and Polish</title>
+      <tasks>
+        - Discovery-focused homepage
+        - Featured businesses section
+        - Upcoming events section
+        - Social sharing
+        - Empty states
+        - Loading states
+        - Error handling
+      </tasks>
+    </step>
+
+    <step number="15">
+      <title>Testing and Refinement</title>
+      <tasks>
+        - Responsive design testing
+        - Accessibility review
+        - Performance optimization
+        - Edge case handling
+        - Final polish
       </tasks>
     </step>
   </implementation_steps>
 
   <success_criteria>
     <functionality>
-      - All user types can complete their core workflows
+      - All CRUD operations work correctly
       - Search returns relevant results with proper filtering
-      - Location detection works accurately
-      - Reviews and ratings function correctly
-      - Events with RSVP work end-to-end
-      - Business owner analytics display real data
-      - Admin can manage all platform entities
-      - All data persists correctly (no mock data)
+      - Geolocation features work
+      - All user roles have appropriate access
+      - Events and RSVPs function properly
+      - Analytics display accurate data
+      - One review per business enforced
+      - Only verified owners can respond to reviews
     </functionality>
     <user_experience>
-      - Glassmorphism design is consistent and professional
-      - Navigation is intuitive and clear
-      - Forms provide helpful validation feedback
-      - Loading states prevent confusion
-      - Mobile experience is fully functional
-      - Dark mode works throughout
+      - Clean, minimal, intuitive navigation
+      - Fast page loads
+      - Responsive on all devices
+      - Clear feedback for all actions
+      - Smooth transitions
+      - Working light/dark mode
     </user_experience>
     <technical_quality>
-      - TypeScript strict mode passes
-      - No console errors in normal operation
-      - API responses are fast (<1s for most operations)
-      - Database queries are optimized
-      - Authentication is secure
-      - Role-based access is enforced
+      - No console errors
+      - Proper error handling
+      - Secure authentication
+      - Protected routes enforced
+      - Data persists correctly
+      - No mock data
     </technical_quality>
     <design_polish>
-      - Warm glassmorphism aesthetic throughout
-      - Consistent spacing and typography
-      - Smooth transitions and hover effects
-      - Professional appearance suitable for production
+      - Consistent clean minimal aesthetic
+      - Professional appearance
+      - Accessible to all users
     </design_polish>
   </success_criteria>
 
   <prerequisites>
     <environment_setup>
-      - PostgreSQL database (local or cloud)
-      - Node.js 18+ with pnpm
-      - BETTER_AUTH_SECRET (32+ character secret)
-      - POSTGRES_URL connection string
+      - Node.js 20+
+      - Docker (for PostgreSQL)
+      - pnpm or npm
+      - BETTER_AUTH_SECRET environment variable
+      - DATABASE_URL connection string
     </environment_setup>
-    <removed_requirements>
-      - GOOGLE_CLIENT_ID (removed - using email/password)
-      - GOOGLE_CLIENT_SECRET (removed)
-      - OPENROUTER_API_KEY (removed - no AI features)
-    </removed_requirements>
   </prerequisites>
 
   <additional_notes>
-    <monetization>Not implemented in this version - all listings are free</monetization>
+    <monetization>Not implemented - all listings are free</monetization>
     <verification>Business verification happens outside the app; admins toggle status manually</verification>
-    <internationalization>Country-based filtering, not full i18n/localization</internationalization>
+    <internationalization>Country-based filtering only, not full i18n/localization</internationalization>
+    <email>No email integration - in-app notifications only</email>
   </additional_notes>
 </project_specification>

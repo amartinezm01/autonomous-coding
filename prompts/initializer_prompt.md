@@ -54,7 +54,7 @@ curl -X POST http://localhost:8765/features/bulk \
 
 **Requirements for features:**
 
-- Feature count must match the `feature_count` specified in app_spec.txt (currently 340)
+- Feature count must match the `feature_count` specified in app_spec.txt (currently 190)
 - Reference tiers for other projects:
   - **Simple apps**: ~150 tests
   - **Medium apps**: ~250 tests

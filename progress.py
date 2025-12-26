@@ -18,6 +18,44 @@ WEBHOOK_URL = os.environ.get("PROGRESS_N8N_WEBHOOK_URL")
 PROGRESS_CACHE_FILE = ".progress_cache"
 
 
+def has_features(project_dir: Path) -> bool:
+    """
+    Check if the project has features in the database.
+
+    This is used to determine if the initializer agent needs to run.
+    We check the database directly (not via API) since the API server
+    may not be running yet when this check is performed.
+
+    Returns True if:
+    - features.db exists AND has at least 1 feature, OR
+    - feature_list.json exists (legacy format)
+
+    Returns False if no features exist (initializer needs to run).
+    """
+    import sqlite3
+
+    # Check legacy JSON file first
+    json_file = project_dir / "feature_list.json"
+    if json_file.exists():
+        return True
+
+    # Check SQLite database
+    db_file = project_dir / "features.db"
+    if not db_file.exists():
+        return False
+
+    try:
+        conn = sqlite3.connect(db_file)
+        cursor = conn.cursor()
+        cursor.execute("SELECT COUNT(*) FROM features")
+        count = cursor.fetchone()[0]
+        conn.close()
+        return count > 0
+    except Exception:
+        # Database exists but can't be read or has no features table
+        return False
+
+
 def _api_get(endpoint: str) -> dict:
     """
     Make a GET request to the Feature API.
@@ -81,20 +119,25 @@ def send_progress_webhook(passing: int, total: int, project_dir: Path) -> None:
         completed_tests = []
         current_passing_ids = []
 
+        # Detect transition from old cache format (had count but no passing_ids)
+        # In this case, we can't reliably identify which specific tests are new
+        is_old_cache_format = len(previous_passing_ids) == 0 and previous > 0
+
         try:
-            # Get all passing features
-            data = _api_get("/features?passes=true&limit=1000")
+            # Get all passing features (uses internal endpoint without 5-feature cap)
+            data = _api_get("/features/all-passing")
             for feature in data.get("features", []):
                 feature_id = feature.get("id")
                 current_passing_ids.append(feature_id)
-                if feature_id not in previous_passing_ids:
+                # Only identify individual new tests if we have previous IDs to compare
+                if not is_old_cache_format and feature_id not in previous_passing_ids:
                     # This feature is newly passing
-                    desc = feature.get("description", f"Feature #{feature_id}")
+                    name = feature.get("name", f"Feature #{feature_id}")
                     category = feature.get("category", "")
                     if category:
-                        completed_tests.append(f"[{category}] {desc}")
+                        completed_tests.append(f"{category} {name}")
                     else:
-                        completed_tests.append(desc)
+                        completed_tests.append(name)
         except Exception as e:
             print(f"[API error getting features: {e}]")
 
@@ -129,7 +172,7 @@ def send_progress_webhook(passing: int, total: int, project_dir: Path) -> None:
         if not cache_file.exists():
             current_passing_ids = []
             try:
-                data = _api_get("/features?passes=true&limit=1000")
+                data = _api_get("/features/all-passing")
                 for feature in data.get("features", []):
                     current_passing_ids.append(feature.get("id"))
             except Exception:

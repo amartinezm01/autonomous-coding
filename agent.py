@@ -12,7 +12,7 @@ from typing import Optional
 from claude_code_sdk import ClaudeSDKClient
 
 from client import create_client
-from progress import print_session_header, print_progress_summary
+from progress import print_session_header, print_progress_summary, has_features
 from prompts import get_initializer_prompt, get_coding_prompt, copy_spec_to_project
 
 
@@ -122,10 +122,9 @@ async def run_autonomous_agent(
     project_dir.mkdir(parents=True, exist_ok=True)
 
     # Check if this is a fresh start or continuation
-    # Check for either the old JSON file or the new SQLite database
-    json_file = project_dir / "feature_list.json"
-    db_file = project_dir / "features.db"
-    is_first_run = not json_file.exists() and not db_file.exists()
+    # Uses has_features() which checks if the database actually has features,
+    # not just if the file exists (empty db should still trigger initializer)
+    is_first_run = not has_features(project_dir)
 
     if is_first_run:
         print("Fresh start - will use initializer agent")

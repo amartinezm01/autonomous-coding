@@ -76,6 +76,19 @@ class HealthResponse(BaseModel):
     database: str
 
 
+class PassingFeatureSummary(BaseModel):
+    """Minimal schema for passing feature (used by server-side progress tracking)."""
+    id: int
+    category: str
+    name: str
+
+
+class AllPassingResponse(BaseModel):
+    """Schema for all-passing endpoint (server-side use only)."""
+    features: List[PassingFeatureSummary]
+    count: int
+
+
 class SkipResponse(BaseModel):
     """Schema for skip feature response."""
     id: int
@@ -197,6 +210,33 @@ def create_app(project_dir: Path) -> FastAPI:
             "passing": passing,
             "total": total,
             "percentage": percentage,
+        }
+
+    @app.get("/features/all-passing", response_model=AllPassingResponse)
+    def get_all_passing_features(db: Session = Depends(get_db)):
+        """
+        Get all passing features (server-side use only).
+
+        This endpoint is used by the progress tracking system to identify
+        newly passing features for webhook notifications. It returns minimal
+        data (id, category, name) without the 5-feature cap.
+
+        NOTE: This endpoint is NOT documented in agent prompts and should
+        only be used by server-side code (progress.py).
+        """
+        features = (
+            db.query(Feature)
+            .filter(Feature.passes == True)
+            .order_by(Feature.priority.asc(), Feature.id.asc())
+            .all()
+        )
+
+        return {
+            "features": [
+                {"id": f.id, "category": f.category, "name": f.name}
+                for f in features
+            ],
+            "count": len(features),
         }
 
     @app.get("/features/{feature_id}", response_model=FeatureResponse)
