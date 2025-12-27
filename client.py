@@ -9,15 +9,10 @@ import json
 import os
 from pathlib import Path
 
-from claude_code_sdk import ClaudeCodeOptions, ClaudeSDKClient
-from claude_code_sdk.types import HookMatcher
+from claude_agent_sdk import ClaudeAgentOptions, ClaudeSDKClient
+from claude_agent_sdk.types import HookMatcher
 
 from security import bash_security_hook
-
-# Increase MCP message buffer size to handle large screenshots (default is 1MB)
-# Some pages with photos generate base64-encoded screenshots that exceed the limit
-import claude_code_sdk._internal.transport.subprocess_cli as _transport
-_transport._MAX_BUFFER_SIZE = 10 * 1024 * 1024  # 10MB
 
 
 # Puppeteer MCP tools for browser automation
@@ -43,7 +38,7 @@ BUILTIN_TOOLS = [
 ]
 
 
-def create_client(project_dir: Path, model: str) -> ClaudeSDKClient:
+def create_client(project_dir: Path, model: str):
     """
     Create a Claude Agent SDK client with multi-layered security.
 
@@ -52,7 +47,7 @@ def create_client(project_dir: Path, model: str) -> ClaudeSDKClient:
         model: Claude model to use
 
     Returns:
-        Configured ClaudeSDKClient
+        Configured ClaudeSDKClient (from claude_agent_sdk)
 
     Security layers (defense in depth):
     1. Sandbox - OS-level bash command isolation prevents filesystem escape
@@ -104,12 +99,15 @@ def create_client(project_dir: Path, model: str) -> ClaudeSDKClient:
     print(f"   - Filesystem restricted to: {project_dir.resolve()}")
     print("   - Bash commands restricted to allowlist (see security.py)")
     print("   - MCP servers: puppeteer (browser automation)")
+    print("   - Project settings enabled (skills, commands, CLAUDE.md)")
     print()
 
     return ClaudeSDKClient(
-        options=ClaudeCodeOptions(
+        options=ClaudeAgentOptions(
             model=model,
             system_prompt="You are an expert full-stack developer building a production-quality web application.",
+            setting_sources=["project"],  # Enable skills, commands, and CLAUDE.md from project dir
+            max_buffer_size=10 * 1024 * 1024,  # 10MB for large Puppeteer screenshots
             allowed_tools=[
                 *BUILTIN_TOOLS,
                 *PUPPETEER_TOOLS,

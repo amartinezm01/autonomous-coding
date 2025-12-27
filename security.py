@@ -26,6 +26,9 @@ ALLOWED_COMMANDS = {
     "chmod",  # For making scripts executable; validated separately
     # Directory
     "pwd",
+    "cd",
+    # Output
+    "echo",
     # Node.js development
     "npm",
     "npx",
