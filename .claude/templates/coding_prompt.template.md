@@ -17,17 +17,21 @@ ls -la
 # 3. Read the project specification to understand what you're building
 cat app_spec.txt
 
-# 4. Read the feature list to see all work
-cat feature_list.json | head -50
-
-# 5. Read progress notes from previous sessions
+# 4. Read progress notes from previous sessions
 cat claude-progress.txt
 
-# 6. Check recent git history
+# 5. Check recent git history
 git log --oneline -20
+```
 
-# 7. Count remaining tests
-cat feature_list.json | grep '"passes": false' | wc -l
+Then use MCP tools to check feature status:
+
+```
+# 6. Get progress statistics (passing/total counts)
+Use the feature_get_stats tool
+
+# 7. Get the next feature to work on
+Use the feature_get_next tool
 ```
 
 Understanding the `app_spec.txt` is critical - it contains the full requirements
@@ -51,7 +55,14 @@ Otherwise, start servers manually and document the process.
 The previous session may have introduced bugs. Before implementing anything
 new, you MUST run verification tests.
 
-Run 1-2 of the feature tests marked as `"passes": true` that are most core to the app's functionality to verify they still work.
+Run 1-2 of the features marked as passing that are most core to the app's functionality to verify they still work.
+
+To get passing features for regression testing:
+
+```
+Use the feature_get_for_regression tool (returns up to 3 random passing features)
+```
+
 For example, if this were a chat app, you should perform a test that logs into the app, sends a message, and gets a response.
 
 **If you find ANY issues (functional or visual):**
@@ -70,10 +81,34 @@ For example, if this were a chat app, you should perform a test that logs into t
 
 ### STEP 4: CHOOSE ONE FEATURE TO IMPLEMENT
 
-Look at feature_list.json and find the highest-priority feature with "passes": false.
+Get the next feature to implement:
+
+```
+# Get the highest-priority pending feature
+Use the feature_get_next tool
+```
 
 Focus on completing one feature perfectly and completing its testing steps in this session before moving on to other features.
 It's ok if you only complete one feature in this session, as there will be more sessions later that continue to make progress.
+
+#### If You Cannot Implement the Feature
+
+Sometimes a feature cannot be implemented yet. Valid reasons to skip:
+
+- **Dependency**: The feature requires another feature to be implemented first
+- **Missing prerequisite**: Core infrastructure (auth, database schema) isn't ready
+- **Unclear requirements**: The feature description is ambiguous and needs clarification
+
+If you encounter a blocker, **skip the feature** to move it to the end of the queue:
+
+```
+# Skip feature #42 - moves it to end of priority queue
+Use the feature_skip tool with feature_id=42
+```
+
+After skipping, use the feature_get_next tool again to get the next feature to work on.
+
+**Do NOT skip features just because they seem difficult.** Only skip when there is a genuine dependency or blocker. Document why you skipped in `claude-progress.txt`.
 
 ### STEP 5: IMPLEMENT THE FEATURE
 
@@ -114,12 +149,14 @@ Use browser automation tools:
 **You MUST complete ALL of these checks before marking any feature as "passes": true**
 
 #### Security Verification (for protected features)
+
 - [ ] Feature respects user role permissions
 - [ ] Unauthenticated access is blocked (redirects to login)
 - [ ] API endpoint checks authorization (returns 401/403 appropriately)
 - [ ] Cannot access other users' data by manipulating URLs
 
 #### Real Data Verification (CRITICAL - NO MOCK DATA)
+
 - [ ] Created unique test data via UI (e.g., "TEST_12345_VERIFY_ME")
 - [ ] Verified the EXACT data I created appears in UI
 - [ ] Refreshed page - data persists (proves database storage)
@@ -128,12 +165,14 @@ Use browser automation tools:
 - [ ] Dashboard/counts reflect real numbers after my changes
 
 #### Navigation Verification
+
 - [ ] All buttons on this page link to existing routes
 - [ ] No 404 errors when clicking any interactive element
 - [ ] Back button returns to correct previous page
 - [ ] Related links (edit, view, delete) have correct IDs in URLs
 
 #### Integration Verification
+
 - [ ] Console shows ZERO JavaScript errors
 - [ ] Network tab shows successful API calls (no 500s)
 - [ ] Data returned from API matches what UI displays
@@ -145,7 +184,9 @@ Use browser automation tools:
 **Run this sweep AFTER EVERY FEATURE before marking it as passing:**
 
 #### 1. Code Pattern Search
+
 Search the codebase for forbidden patterns:
+
 ```bash
 # Search for mock data patterns
 grep -r "mockData\|fakeData\|sampleData\|dummyData\|testData" --include="*.js" --include="*.ts" --include="*.jsx" --include="*.tsx"
@@ -156,7 +197,9 @@ grep -r "hardcoded\|placeholder" --include="*.js" --include="*.ts" --include="*.
 **If ANY matches found related to your feature - FIX THEM before proceeding.**
 
 #### 2. Runtime Verification
+
 For ANY data displayed in UI:
+
 1. Create NEW data with UNIQUE content (e.g., "TEST_12345_DELETE_ME")
 2. Verify that EXACT content appears in the UI
 3. Delete the record
@@ -164,42 +207,41 @@ For ANY data displayed in UI:
 5. **If you see data that wasn't created during testing - IT'S MOCK DATA. Fix it.**
 
 #### 3. Database Verification
+
 Check that:
+
 - Database tables contain only data you created during tests
 - Counts/statistics match actual database record counts
 - No seed data is masquerading as user data
 
 #### 4. API Response Verification
+
 For API endpoints used by this feature:
+
 - Call the endpoint directly
 - Verify response contains actual database data
 - Empty database = empty response (not pre-populated mock data)
 
-### STEP 7: UPDATE feature_list.json (CAREFULLY!)
+### STEP 7: UPDATE FEATURE STATUS (CAREFULLY!)
 
 **YOU CAN ONLY MODIFY ONE FIELD: "passes"**
 
-After thorough verification, change:
+After thorough verification, mark the feature as passing:
 
-```json
-"passes": false
 ```
-
-to:
-
-```json
-"passes": true
+# Mark feature #42 as passing (replace 42 with the actual feature ID)
+Use the feature_mark_passing tool with feature_id=42
 ```
 
 **NEVER:**
 
-- Remove tests
-- Edit test descriptions
-- Modify test steps
-- Combine or consolidate tests
-- Reorder tests
+- Delete features
+- Edit feature descriptions
+- Modify feature steps
+- Combine or consolidate features
+- Reorder features
 
-**ONLY CHANGE "passes" FIELD AFTER VERIFICATION WITH SCREENSHOTS.**
+**ONLY MARK A FEATURE AS PASSING AFTER VERIFICATION WITH SCREENSHOTS.**
 
 ### STEP 8: COMMIT YOUR PROGRESS
 
@@ -211,7 +253,7 @@ git commit -m "Implement [feature name] - verified end-to-end
 
 - Added [specific changes]
 - Tested with browser automation
-- Updated feature_list.json: marked test #X as passing
+- Marked feature #X as passing
 - Screenshots in verification/ directory
 "
 ```
@@ -232,7 +274,7 @@ Before context fills up:
 
 1. Commit all working code
 2. Update claude-progress.txt
-3. Update feature_list.json if tests verified
+3. Mark features as passing if tests verified
 4. Ensure no uncommitted changes
 5. Leave app in working state (no broken features)
 
@@ -244,33 +286,104 @@ Before context fills up:
 
 Available tools:
 
-- browser_navigate - Start browser and go to URL
-- browser_snapshot - Get accessibility tree with element refs (use BEFORE interactions)
-- browser_click - Click elements (using ref from snapshot)
-- browser_fill_form - Fill form inputs (using ref from snapshot)
-- browser_type - Type text with keyboard
+**Navigation & Screenshots:**
+
+- browser_navigate - Navigate to a URL
+- browser_navigate_back - Go back to previous page
+- browser_take_screenshot - Capture screenshot (use for visual verification)
+- browser_snapshot - Get accessibility tree snapshot (structured page data)
+
+**Element Interaction:**
+
+- browser_click - Click elements (has built-in auto-wait)
+- browser_type - Type text into editable elements
+- browser_fill_form - Fill multiple form fields at once
+- browser_select_option - Select dropdown options
 - browser_hover - Hover over elements
-- browser_wait_for - Wait for elements/conditions (no manual sleeps needed!)
-- browser_verify_element_visible - Assert element is visible
-- browser_verify_text_visible - Assert text appears on page
-- browser_console_messages - Check for JavaScript errors
-- browser_evaluate - Execute JavaScript (use sparingly, only for debugging)
+- browser_drag - Drag and drop between elements
+- browser_press_key - Press keyboard keys
 
-**Testing workflow:**
+**Debugging & Monitoring:**
 
-1. browser_navigate → go to URL
-2. browser_snapshot → get element refs (REQUIRED before interactions)
-3. browser_click/browser_fill_form → interact using refs from snapshot
-4. browser_wait_for → wait for UI updates if needed
-5. browser*verify*\* → assert results
+- browser_console_messages - Get browser console output (check for errors)
+- browser_network_requests - Monitor API calls and responses
+- browser_evaluate - Execute JavaScript (use sparingly)
 
-Focus on functional correctness. UI polish can be addressed later.
+**Browser Management:**
+
+- browser_close - Close the browser
+- browser_resize - Resize browser window (use to test mobile: 375x667, tablet: 768x1024, desktop: 1280x720)
+- browser_tabs - Manage browser tabs
+- browser_wait_for - Wait for text/element/time
+- browser_handle_dialog - Handle alert/confirm dialogs
+- browser_file_upload - Upload files
+
+**Key Benefits:**
+
+- All interaction tools have **built-in auto-wait** - no manual timeouts needed
+- Use `browser_console_messages` to detect JavaScript errors
+- Use `browser_network_requests` to verify API calls succeed
+
+Test like a human user with mouse and keyboard. Don't take shortcuts by using JavaScript evaluation.
+
+---
+
+## FEATURE TOOL USAGE RULES (CRITICAL - DO NOT VIOLATE)
+
+The feature tools exist to reduce token usage. **DO NOT make exploratory queries.**
+
+### ALLOWED Feature Tools (ONLY these):
+
+```
+# 1. Get progress stats (passing/total counts)
+feature_get_stats
+
+# 2. Get the NEXT feature to work on (one feature only)
+feature_get_next
+
+# 3. Get up to 3 random passing features for regression testing
+feature_get_for_regression
+
+# 4. Mark a feature as passing (after verification)
+feature_mark_passing with feature_id={id}
+
+# 5. Skip a feature (moves to end of queue) - ONLY when blocked by dependency
+feature_skip with feature_id={id}
+```
+
+### RULES:
+
+- Do NOT try to fetch lists of all features
+- Do NOT query features by category
+- Do NOT list all pending features
+
+**You do NOT need to see all features.** The feature_get_next tool tells you exactly what to work on. Trust it.
+
+---
+
+## EMAIL INTEGRATION (DEVELOPMENT MODE)
+
+When building applications that require email functionality (password resets, email verification, notifications, etc.), you typically won't have access to a real email service or the ability to read email inboxes.
+
+**Solution:** Configure the application to log emails to the terminal instead of sending them.
+
+- Password reset links should be printed to the console
+- Email verification links should be printed to the console
+- Any notification content should be logged to the terminal
+
+**During testing:**
+
+1. Trigger the email action (e.g., click "Forgot Password")
+2. Check the terminal/server logs for the generated link
+3. Use that link directly to verify the functionality works
+
+This allows you to fully test email-dependent flows without needing external email services.
 
 ---
 
 ## IMPORTANT REMINDERS
 
-**Your Goal:** Production-quality application with ALL tests passing (150/250/400+ depending on complexity)
+**Your Goal:** Production-quality application with all tests passing
 
 **This Session's Goal:** Complete at least one feature perfectly
 

@@ -50,8 +50,9 @@ Examples:
   # Continue existing project
   python autonomous_agent_demo.py --project-dir ./claude_clone
 
-Environment Variables:
-  ANTHROPIC_API_KEY    Your Anthropic API key (required)
+Authentication:
+  Uses Claude CLI credentials from ~/.claude/.credentials.json
+  Run 'claude login' to authenticate (handled by start.bat/start.sh)
         """,
     )
 
@@ -83,14 +84,8 @@ def main() -> None:
     """Main entry point."""
     args = parse_args()
 
-    # Check for API key
-    if not os.environ.get("ANTHROPIC_API_KEY") and not os.environ.get("CLAUDE_CODE_OAUTH_TOKEN"):
-        print("Error: ANTHROPIC_API_KEY environment variable not set")
-        print("Error: CLAUDE_CODE_OAUTH_TOKEN environment variable not set")
-        print("\nGet your API key from: https://console.anthropic.com/")
-        print("\nThen set it:")
-        print("  export ANTHROPIC_API_KEY='your-api-key-here'")
-        return
+    # Note: Authentication is handled by start.bat/start.sh before this script runs.
+    # The Claude SDK auto-detects credentials from ~/.claude/.credentials.json
 
     # Automatically place projects in generations/ directory unless already specified
     project_dir = args.project_dir
@@ -103,8 +98,8 @@ def main() -> None:
             # Prepend generations/ to relative paths
             project_dir = Path("generations") / project_dir
 
-    # Run the agent
     try:
+        # Run the agent (MCP server handles feature database)
         asyncio.run(
             run_autonomous_agent(
                 project_dir=project_dir,

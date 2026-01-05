@@ -9,11 +9,16 @@ import asyncio
 from pathlib import Path
 from typing import Optional
 
-from claude_code_sdk import ClaudeSDKClient
+from claude_agent_sdk import ClaudeSDKClient
 
 from client import create_client
-from progress import print_session_header, print_progress_summary
-from prompts import get_initializer_prompt, get_coding_prompt, copy_spec_to_project
+from progress import print_session_header, print_progress_summary, has_features
+from prompts import (
+    get_initializer_prompt,
+    get_coding_prompt,
+    copy_spec_to_project,
+    has_project_prompts,
+)
 
 
 # Configuration
@@ -122,8 +127,9 @@ async def run_autonomous_agent(
     project_dir.mkdir(parents=True, exist_ok=True)
 
     # Check if this is a fresh start or continuation
-    tests_file = project_dir / "feature_list.json"
-    is_first_run = not tests_file.exists()
+    # Uses has_features() which checks if the database actually has features,
+    # not just if the file exists (empty db should still trigger initializer)
+    is_first_run = not has_features(project_dir)
 
     if is_first_run:
         print("Fresh start - will use initializer agent")
@@ -159,11 +165,12 @@ async def run_autonomous_agent(
         client = create_client(project_dir, model)
 
         # Choose prompt based on session type
+        # Pass project_dir to enable project-specific prompts
         if is_first_run:
-            prompt = get_initializer_prompt()
+            prompt = get_initializer_prompt(project_dir)
             is_first_run = False  # Only use initializer once
         else:
-            prompt = get_coding_prompt()
+            prompt = get_coding_prompt(project_dir)
 
         # Run session with async context manager
         async with client:
